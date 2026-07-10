@@ -3,12 +3,12 @@
   var STORAGE_KEY = 'plant-doctor-lang';
 
   var UI_STRINGS = {
-    ru: { navPrivacy: 'Политика конфиденциальности', navDelete: 'Удаление аккаунта' },
-    en: { navPrivacy: 'Privacy Policy', navDelete: 'Delete Account' },
-    uk: { navPrivacy: 'Політика конфіденційності', navDelete: 'Видалення акаунта' },
-    es: { navPrivacy: 'Política de privacidad', navDelete: 'Eliminar cuenta' },
-    de: { navPrivacy: 'Datenschutzerklärung', navDelete: 'Konto löschen' },
-    fr: { navPrivacy: 'Politique de confidentialité', navDelete: 'Supprimer le compte' }
+    ru: { navPrivacy: 'Политика конфиденциальности', navTerms: 'Условия использования', navDelete: 'Удаление аккаунта' },
+    en: { navPrivacy: 'Privacy Policy', navTerms: 'Terms of Service', navDelete: 'Delete Account' },
+    uk: { navPrivacy: 'Політика конфіденційності', navTerms: 'Умови використання', navDelete: 'Видалення акаунта' },
+    es: { navPrivacy: 'Política de privacidad', navTerms: 'Términos de uso', navDelete: 'Eliminar cuenta' },
+    de: { navPrivacy: 'Datenschutzerklärung', navTerms: 'Nutzungsbedingungen', navDelete: 'Konto löschen' },
+    fr: { navPrivacy: 'Politique de confidentialité', navTerms: "Conditions d'utilisation", navDelete: 'Supprimer le compte' }
   };
 
   function detectLang() {
@@ -24,13 +24,26 @@
   function setLang(lang) {
     if (SUPPORTED.indexOf(lang) === -1) lang = 'en';
 
-    document.querySelectorAll('[data-lang-section]').forEach(function (el) {
-      var active = el.getAttribute('data-lang-section') === lang;
+    // Some pages only have content for a subset of SUPPORTED languages
+    // (e.g. a page freshly added in ru/en only). If the requested language
+    // has no matching section here, fall back to 'en' (or the first
+    // available section) for the *content*, while the nav/header still
+    // follow the user's actual language preference below.
+    var sections = document.querySelectorAll('[data-lang-section]');
+    var contentLang = lang;
+    if (sections.length && !document.querySelector('[data-lang-section="' + lang + '"]')) {
+      contentLang = document.querySelector('[data-lang-section="en"]')
+        ? 'en'
+        : sections[0].getAttribute('data-lang-section');
+    }
+
+    sections.forEach(function (el) {
+      var active = el.getAttribute('data-lang-section') === contentLang;
       el.classList.toggle('is-active', active);
     });
 
     document.querySelectorAll('[data-lang-btn]').forEach(function (btn) {
-      var active = btn.getAttribute('data-lang-btn') === lang;
+      var active = btn.getAttribute('data-lang-btn') === contentLang;
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
 
@@ -40,7 +53,7 @@
       if (strings[key]) el.textContent = strings[key];
     });
 
-    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('lang', contentLang);
     localStorage.setItem(STORAGE_KEY, lang);
   }
 
